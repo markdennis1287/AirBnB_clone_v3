@@ -9,14 +9,14 @@ from models import storage
 from models.user import User
 
 
-@app_views.route('/users', strict_slashes=False)
+@app_views.route('/users', strict_slashes=False, methods=['GET'])
 def get_all_users():
     """ get all users """
-    users = storage.all(User)
+    users = storage.all(User).values()
     return jsonify([user.to_dict() for user in users])
 
 
-@app_views.route('/users/<user_id>', strict_slashes=False)
+@app_views.route('/users/<user_id>', strict_slashes=False, methods=['GET'])
 def get_user(user_id):
     """ get user by id """
     user = storage.get(User, user_id)
@@ -43,9 +43,9 @@ def create_user():
     """ create user """
     if request.content_type != 'application/json':
         return abort(400, 'Not a JSON')
-    if not request.get_json():
-        return abort(400, 'Not a JSON')
     data = request.get_json()
+    if not data:
+        return abort(400, 'Not a JSON')
     if 'email' not in data:
         return abort(400, 'Missing email')
     if 'password' not in data:
@@ -59,17 +59,17 @@ def create_user():
 def update_user(user_id):
     """ update user """
     user = storage.get(User, user_id)
-    if user:
-        if request.content_type != 'application/json':
-            return abort(400, 'Not a JSON')
-        if not request.get_json():
-            return abort(400, 'Not a JSON')
-        data = request.get_json()
-        ignore_keys = ['id', 'created_at', 'updated_at']
-        for key, value in data.items():
-            if key not in ignore_keys:
-                setattr(user, key, value)
-        user.save()
-        return jsonify(user.to_dict()), 200
-    else:
-        return abort(404)
+    if not user:
+        abort(404)
+    if request.content_type != 'application/json':
+        return abort(400, 'Not a JSON')
+    data = request.get_json()
+    if not data:
+        return abort(400, 'Not a JSON')
+    ignore_keys = ['id', 'created_at', 'updated_at']
+    for key, value in data.items():
+        if key not in ignore_keys:
+            setattr(user, key, value)
+    user.save()
+    return jsonify(user.to_dict()), 200
+
