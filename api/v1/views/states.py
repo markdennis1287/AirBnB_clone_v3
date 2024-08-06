@@ -49,15 +49,15 @@ def create_state():
 
     """
     if request.content_type != 'application/json':
-        abort(400, 'Not a JSON')
+        return abort(400, 'Not a JSON')
     if not request.get_json():
-        abort(400, 'Not a JSON')
+        return abort(400, 'Not a JSON')
     kwargs = request.get_json()
     if 'name' not in kwargs:
         abort(400, 'Missing name')
     state = State(**kwargs)
     state.save()
-    return jsonify(state.to_dict()), 201
+    return jsonify(state.to_dict()), 200 
 
 
 @app_views.route('/states/<state_id>', strict_slashes=False, methods=['PUT'])
