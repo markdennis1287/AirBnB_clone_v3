@@ -74,3 +74,4 @@ def update_city(city_id):
         return jsonify(city.to_dict()), 200
     else:
         return abort(404)
+
