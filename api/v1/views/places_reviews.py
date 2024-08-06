@@ -78,5 +78,3 @@ def update_review(review_id):
             setattr(review, key, value)
     review.save()
     return jsonify(review.to_dict()), 200
-
-# Ensure the last line of the file is a newline
