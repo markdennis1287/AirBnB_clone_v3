@@ -1,76 +1,71 @@
 #!/usr/bin/python3
-"""Amenities"""
+"""
+View for Amenity objects
+"""
+
 from api.v1.views import app_views
-from flask import request, jsonify, abort
-from models import storage, amenity
+from flask import jsonify, abort, request
+from models import storage
+from models.amenity import Amenity
 
+@app_views.route('/amenities', strict_slashes=False)
+def get_all_amenities():
+    """ get all amenities in a list """
+    amenity_list = []
+    for key, value in storage.all(Amenity).items():
+        amenity_list.append(value.to_dict())
+    return jsonify(amenity_list)
 
-@app_views.route('/amenities', methods=['GET'], strict_slashes=False)
-def getallamenities():
-    """Gets all amenities"""
-    res = []
-    for i in storage.all("Amenity").values():
-        res.append(i.to_dict())
-
-    return jsonify(res)
-
-
-@app_views.route('/amenities/<amenity_id>', methods=['GET'],
-                 strict_slashes=False)
-def getamenity(amenity_id=None):
-    """Gets an amenity"""
-    s = storage.get("Amenity", amenity_id)
-    if s is None:
-        abort(404)
+@app_views.route('/amenities/<amenity_id>', strict_slashes=False)
+def get_amenity(amenity_id):
+    """ get amenity """
+    amenity = storage.get(Amenity, amenity_id)
+    if amenity:
+        return jsonify(amenity.to_dict())
     else:
-        return jsonify(s.to_dict())
+        return abort(404)
 
-
-@app_views.route('/amenities/<amenity_id>', methods=['DELETE'],
-                 strict_slashes=False)
-def deleteamenity(amenity_id=None):
-    """Deletes an amenity"""
-    s = storage.get("Amenity", amenity_id)
-    if s is None:
-        abort(404)
-    else:
-        storage.delete(obj)
+@app_views.route('/amenities/<amenity_id>', strict_slashes=False, methods=['DELETE'])
+def delete_amenity(amenity_id):
+    """ delete amenity """
+    amenity = storage.get(Amenity, amenity_id)  # Corrected this line
+    if amenity:
+        storage.delete(amenity)
         storage.save()
         return jsonify({}), 200
-
-
-@app_views.route('/amenities', methods=['POST'], strict_slashes=False)
-def createamenity():
-    """Create an amenity"""
-    s = request.get_json(silent=True)
-    if s is None:
-        abort(400, "Not a JSON")
-    elif "name" not in s.keys():
-        abort(400, "Missing name")
     else:
-        new_s = amenities.Amenity(**s)
-        storage.new(new_s)
-        storage.save()
-        return jsonify(new_s.to_dict()), 201
+        return abort(404)
 
+@app_views.route('/amenities', strict_slashes=False, methods=['POST'])
+def create_amenity():
+    """ create amenity """
+    if request.content_type != 'application/json':
+        return abort(400, 'Not a JSON')
+    if not request.get_json():
+        return abort(400, 'Not a JSON')
+    data = request.get_json()
+    if 'name' not in data:
+        return abort(400, 'Missing name')
+    amenity = Amenity(**data)
+    amenity.save()
+    return jsonify(amenity.to_dict()), 201
 
-@app_views.route('/amenities/<amenity_id>', methods=['PUT'],
-                 strict_slashes=False)
-def updateamenity(amenity_id=None):
-    """Update an amenity"""
-    obj = storage.get("Amenity", amenity_id)
-    if obj is None:
-        abort(404)
-
-    s = request.get_json(silent=True)
-    if s is None:
-        abort(400, "Not a JSON")
+@app_views.route('/amenities/<amenity_id>', strict_slashes=False, methods=['PUT'])
+def update_amenity(amenity_id):
+    """ update amenity """
+    if request.content_type != 'application/json':
+        return abort(400, 'Not a JSON')
+    if not request.get_json():
+        return abort(400, 'Not a JSON')
+    data = request.get_json()
+    amenity = storage.get(Amenity, amenity_id)  # Corrected this line
+    if amenity:
+        ignore_keys = ['id', 'created_at', 'updated_at']
+        for key, value in data.items():
+            if key not in ignore_keys:
+                setattr(amenity, key, value)
+        amenity.save()
+        return jsonify(amenity.to_dict()), 200
     else:
-        for k, v in s.items():
-            if k in ['id', 'created_at', 'updated_at']:
-                pass
-            else:
-                setattr(obj, k, v)
-        storage.save()
-        res = obj.to_dict()
-        return jsonify(res), 200
+        return abort(404)
+
