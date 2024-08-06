@@ -11,6 +11,7 @@ from models import base_model, amenity, city, place, review, state, user
 
 
 class DBStorage:
+<<<<<<< HEAD
     """
         handles long term storage of all class instances
     """
@@ -26,6 +27,9 @@ class DBStorage:
     """
         handles storage for database
     """
+=======
+    """interacts with the MySQL database"""
+>>>>>>> 3ce81c98ab8302554bc6c463cc82b5e5c08934e6
     __engine = None
     __session = None
 
